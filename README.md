@@ -10,12 +10,12 @@ application below:
 
 Doi could be provided via url:
 ```
-http://dx.doi.org/10.1080/09500340.2010.500105
+http://dx.doi.org/10.1145/2854146
 ```
 
 or just the number
 ```
-10.1080/09500340.2010.500105
+10.1145/2854146
 ```
 
 # GoScience Configuration
