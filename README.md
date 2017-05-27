@@ -1,5 +1,5 @@
 # GoScience
-GoScience is Proxy server written in Go for downloading academic papers from Scihub, particulary
+GoScience is proxy server written in Go for downloading academic papers from Scihub, particulary
 useful in case your institution/workplace blocked the access to Scihub, but you
 still need the access to scientific articles.
 
