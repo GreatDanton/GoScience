@@ -1,0 +1,179 @@
+$font-family: "Open Sans",
+sans-serif;
+$border-card: 1px solid #dce0e0;
+$box-shadow-card: 2px 2px 10px rgba(0, 0, 0, 0.2);
+// COLORS
+$color-active: #313131;
+$color-inactive: #888;
+$font-size-p: 14px;
+//BTN
+$color-btn-background: #3f51b5;
+$color-btn-background-hover: #303f9f;
+$color-btn-text: #fff;
+//
+// FORMS:
+$box-shadow-active: 0 0 5px #cacaca;
+$border-active: 1px solid #8a8a8a;
+$border-inactive: 1px solid #c2c0c2;
+
+/*
+TRANSITIONS:
+*/
+
+$transition-default: all 0.2s linear;
+//
+// CODE:
+//
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: $font-family;
+    color: $color-active;
+    font-size: $font-size-p;
+    display: flex;
+    flex-flow: column;
+    min-height: 100%;
+}
+
+.content {
+    flex: 1;
+}
+
+h1 {
+    font-family: $font-family;
+}
+
+
+/*
+********************************************************************************
+* LOGIN:  *
+********************************************************************************
+*/
+
+.login-card {
+    padding: 40px 0;
+    width: 100%;
+    max-width: 600px;
+    border: $border-card;
+    margin: 40px auto;
+    min-height: 400px;
+    box-shadow: $box-shadow-card;
+}
+
+.login-verticalstack {
+    display: flex;
+    justify-content: center;
+    flex-flow: column;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+.login-button {
+    margin-top: 20px;
+}
+
+
+/*
+********************************************************************************
+* Forms :
+********************************************************************************
+*/
+
+input {
+    border: $border-inactive;
+    transition: $transition-default;
+    height: 30px;
+    color: $color-active;
+    border: $border-inactive;
+    box-shadow: none;
+    outline: none;
+    padding: 0 5px;
+}
+
+input:focus {
+    border: $border-active;
+    box-shadow: $box-shadow-active;
+}
+
+label {
+    color: $color-active;
+    font-size: $font-size-p;
+}
+
+.Info {
+    color: red;
+    font-size: $font-size-p;
+    min-height: 19px;
+}
+
+
+/*
+********************************************************************************
+* Buttons
+********************************************************************************
+*/
+
+button {
+    height: 40px;
+    font-size: $font-size-p;
+    background-color: $color-btn-background;
+    border: none;
+    color: $color-btn-text;
+    border-radius: 3px;
+    transition: $transition-default;
+}
+
+button:hover {
+    background-color: $color-btn-background-hover;
+    cursor: pointer;
+}
+
+
+/*
+**********************************************************************
+* Utilities *
+**********************************************************************
+*/
+
+.centered {
+    text-align: center;
+}
+
+.margin-top-20 {
+    margin-top: 20px;
+}
+
+.margin-top-40 {
+    margin-top: 40px;
+}
+
+
+/*
+*******************************
+* Gopher image
+*******************************
+*/
+
+.gopher {
+    margin: 0 auto;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+    max-width: 100%;
+}
+
+.gopher-running {
+    display: block;
+    margin: 20px auto 0;
+    max-height: 150px;
+    max-width: 100%;
+}

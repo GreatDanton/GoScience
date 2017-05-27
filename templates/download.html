@@ -1,0 +1,41 @@
+<html>
+
+<head>
+    <title> Scihub Download </title>
+    <link rel="stylesheet" type="text/css" href="/public/main_min.css" />
+</head>
+
+<body>
+    <div class="content">
+        <img class="gopher-running" src="/public/images/gopherRunning_min.png" />
+
+        <div class="login-card">
+            <h1 class="centered"> Download Articles</h1>
+            <div class="margin-top-40"></div>
+
+            <!-- blank on form is used for opening pdf in new tab -->
+            <form class="login-verticalstack" action="/" method="POST" autocomplete="off">
+                <label for="password">Password: </label></br>
+                <input id="password" name="password" type="password" value="{{.Password}}" autocomplete="off" />
+                <label name="label-password" class="Info">{{.LabelPass}}</label>
+
+                <div class="margin-top-20"></div>
+
+                <label for="doi">Doi:</label></br>
+                <input id="doi" name="doi" value="{{.Doi}}" autocomplete="off" />
+                <label name="label-doi" class="Info">{{.LabelDoi}}</label>
+
+                <div class="margin-top-20"></div>
+                <input type="hidden" name="token" value="{{.Token}}">
+
+                <button class="login-button"> Download </button>
+            </form>
+        </div>
+    </div>
+
+    <img class="gopher" src="/public/images/gopher_min.png" />
+
+    <script src="/public/clearLabels.js"></script>
+</body>
+
+</html>
