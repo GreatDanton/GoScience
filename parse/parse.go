@@ -71,6 +71,9 @@ func parseDoiNumber(d string) (string, error) {
 		return "", fmt.Errorf("Doi number does not exist")
 	}
 
+	// remove trailing white space
+	d = strings.Trim(d, " ")
+
 	// if http does not exist, it means we have just the
 	//string of integers return string
 	if strings.Index(d, "http") == -1 {
