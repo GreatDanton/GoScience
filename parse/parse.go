@@ -31,6 +31,7 @@ func GetPdf(doi string) ([]byte, string, error) {
 	html, err := getHTML(url)
 	// cannot get html page -> returning error
 	if err != nil {
+		fmt.Println(err)
 		return nil, "", err
 	}
 
@@ -48,7 +49,7 @@ func GetPdf(doi string) ([]byte, string, error) {
 	defer pdfResp.Body.Close()
 
 	if pdfResp.StatusCode != http.StatusOK {
-		return nil, "", err
+		return nil, "", fmt.Errorf("%v", pdfResp.StatusCode)
 	}
 
 	// we got the stream, return it

@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/greatdanton/goScience/parse"
@@ -104,10 +105,20 @@ func downloadArticle(w http.ResponseWriter, r *http.Request) {
 		pdf, pdfName, err := parse.GetPdf(doi)
 		// inform user about wrong doi
 		if err != nil {
-			data := parseFormDownload(r, "DOI", "Article with this doi does not exist")
+			label := "DOI"
+			msg := "Article with this doi does not exist"
+			error := fmt.Sprintf("%v", err)
+
+			if strings.Contains(error, "502") { // check for Bad Gateway 502
+				label = "DOI"
+				msg = "Scihub servers are over capacity, try again later"
+			}
+
+			data := parseFormDownload(r, label, msg)
 			t := templateDownload
 			err := t.Execute(w, data)
 			if err != nil {
+				fmt.Println(err)
 				log.Print(err)
 			}
 			return
