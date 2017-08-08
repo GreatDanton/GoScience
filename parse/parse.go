@@ -19,52 +19,60 @@ func main() {
 }*/
 
 // GetPdf fetches pdf from doi string, and returns byte stream(pdf), name of pdf
-// article and error (in case of error)
+// article and error (in case of error). Error is displayed in label located
+// under doi input.
 func GetPdf(doi string) ([]byte, string, error) {
+	// genericError is used when reporting error is necessary, but you don't want
+	// to expose app internals to the end user
+	genericError := fmt.Errorf("GoScience: Internal application error, try again later")
+
 	d, err := parseDoiNumber(doi)
-	// cannot parse doi numbers from doi string
 	if err != nil {
-		return nil, "", err
+		fmt.Println(err)
+		return nil, "", genericError
 	}
 
 	url := fmt.Sprintf("%v%s", ScihubURL, d)
 	html, err := getHTML(url)
-
-	// cannot get html page -> returning error
 	if err != nil {
 		fmt.Println(err)
-		return nil, "", err
+		return nil, "", genericError
 	}
 
 	pdfLink, err := parseLink(html, "content")
 	pdfName := parsePdfName(pdfLink)
-	// link does not exist is doi correct?
 	if err != nil {
-		return nil, "", fmt.Errorf("GetPdf: Could not download pdf, provided doi '%v' does not exist", doi)
+		fmt.Println(err)
+		return nil, "", fmt.Errorf("Article with this doi does not exist")
 	}
 
 	pdfResp, err := http.Get(pdfLink)
 	if err != nil {
-		return nil, "", err
+		fmt.Println(err)
+		return nil, "", genericError
 	}
 	defer pdfResp.Body.Close()
 
 	// return http status code as error stream
 	if pdfResp.StatusCode != http.StatusOK {
-		return nil, "", fmt.Errorf("%v", pdfResp.StatusCode)
+		if pdfResp.StatusCode == http.StatusBadGateway {
+			return nil, "", fmt.Errorf("Scihub servers are over capacity, try again later")
+		}
+		return nil, "", fmt.Errorf("Scihub server status code: %v", pdfResp.Status)
 	}
 
 	// Captcha check:
 	// if captha is present on scihub (Content-type in headers is html/text instead of application/pdf)
 	content := pdfResp.Header.Get("Content-type")
 	if strings.Contains(content, "text/html") {
-		return nil, "", fmt.Errorf("Captcha is present, try again later")
+		return nil, "", fmt.Errorf("Scihub servers returned captcha, try again later")
 	}
 
 	// everything is allright, we got the pdf byte stream, return it
 	pdf, err := ioutil.ReadAll(pdfResp.Body)
 	if err != nil {
-		return nil, "", err
+		fmt.Println(err)
+		return nil, "", genericError
 	}
 
 	fmt.Println("File downloaded")

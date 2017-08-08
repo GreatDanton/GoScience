@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/greatdanton/goScience/parse"
@@ -59,7 +58,6 @@ func ReadConfiguration() (Configuration, error) {
 }
 
 //
-// TODO: move function to separate package? (views?)
 // downloads article with doi set with doi field parameters in download.html template
 // and distribute it to the client
 func downloadArticle(w http.ResponseWriter, r *http.Request) {
@@ -105,17 +103,8 @@ func downloadArticle(w http.ResponseWriter, r *http.Request) {
 		pdf, pdfName, err := parse.GetPdf(doi)
 		// inform user about wrong doi
 		if err != nil {
-			// default message
 			label := "DOI"
-			msg := "Article with this doi does not exist"
-			error := fmt.Sprintf("%v", err)
-
-			// FIXME: find a better way to check for errors
-			if strings.Contains(error, "502") { // check for bad Gateway 502
-				msg = "Scihub servers are over capacity, try again later"
-			} else if strings.Contains(error, "Captcha") { // check for captcha
-				msg = "Scihub servers are over capacity, captcha is present, try again later"
-			}
+			msg := fmt.Sprintf("%v", err)
 
 			// display error message to the end user
 			data := parseFormDownload(r, label, msg)
@@ -128,12 +117,7 @@ func downloadArticle(w http.ResponseWriter, r *http.Request) {
 		}
 		// opens up a browser popup for pdf download
 		w.Header().Set("Content-Disposition", "attachment; filename="+pdfName)
-
-		// display pdf with built in pdf viewer
-		//(TODO: delete this line, leaving it for now in case I need it later)
-		//w.Header().Set("Content-disposition", "inline; filename=article.pdf")
 		http.ServeContent(w, r, pdfName, time.Now(), bytes.NewReader(pdf))
-
 	}
 }
 
