@@ -105,21 +105,24 @@ func downloadArticle(w http.ResponseWriter, r *http.Request) {
 		pdf, pdfName, err := parse.GetPdf(doi)
 		// inform user about wrong doi
 		if err != nil {
+			// default message
 			label := "DOI"
 			msg := "Article with this doi does not exist"
 			error := fmt.Sprintf("%v", err)
 
-			if strings.Contains(error, "502") { // check for Bad Gateway 502
-				label = "DOI"
+			// FIXME: find a better way to check for errors
+			if strings.Contains(error, "502") { // check for bad Gateway 502
 				msg = "Scihub servers are over capacity, try again later"
+			} else if strings.Contains(error, "Captcha") { // check for captcha
+				msg = "Scihub servers are over capacity, captcha is present, try again later"
 			}
 
+			// display error message to the end user
 			data := parseFormDownload(r, label, msg)
 			t := templateDownload
 			err := t.Execute(w, data)
 			if err != nil {
 				fmt.Println(err)
-				log.Print(err)
 			}
 			return
 		}

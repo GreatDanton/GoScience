@@ -29,6 +29,7 @@ func GetPdf(doi string) ([]byte, string, error) {
 
 	url := fmt.Sprintf("%v%s", ScihubURL, d)
 	html, err := getHTML(url)
+
 	// cannot get html page -> returning error
 	if err != nil {
 		fmt.Println(err)
@@ -37,7 +38,7 @@ func GetPdf(doi string) ([]byte, string, error) {
 
 	pdfLink, err := parseLink(html, "content")
 	pdfName := parsePdfName(pdfLink)
-	// link does not exist is doi correct? //TODO: check for captcha ?
+	// link does not exist is doi correct?
 	if err != nil {
 		return nil, "", fmt.Errorf("GetPdf: Could not download pdf, provided doi '%v' does not exist", doi)
 	}
@@ -48,11 +49,19 @@ func GetPdf(doi string) ([]byte, string, error) {
 	}
 	defer pdfResp.Body.Close()
 
+	// return http status code as error stream
 	if pdfResp.StatusCode != http.StatusOK {
 		return nil, "", fmt.Errorf("%v", pdfResp.StatusCode)
 	}
 
-	// we got the stream, return it
+	// Captcha check:
+	// if captha is present on scihub (Content-type in headers is html/text instead of application/pdf)
+	content := pdfResp.Header.Get("Content-type")
+	if strings.Contains(content, "text/html") {
+		return nil, "", fmt.Errorf("Captcha is present, try again later")
+	}
+
+	// everything is allright, we got the pdf byte stream, return it
 	pdf, err := ioutil.ReadAll(pdfResp.Body)
 	if err != nil {
 		return nil, "", err
