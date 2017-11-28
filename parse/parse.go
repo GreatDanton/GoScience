@@ -10,12 +10,12 @@ import (
 // ScihubURL is the entry point for downloading articles on scihub (front page url),
 // it might change in the future that's why it's provided as constant at the top of
 // the page
-const ScihubURL = "http://sci-hub.cc/"
+const ScihubURL = "https://scihub22266oqcxt.onion.link/"
 
 /* Example usage:
 func main() {
 	doi := "10.1080/09500340.2010.500105"
-	GetPdf(doi)
+	pdf, pdfName, err := GetPdf(doi)
 }*/
 
 // GetPdf fetches pdf from doi string, and returns byte stream(pdf), name of pdf
@@ -29,14 +29,14 @@ func GetPdf(doi string) ([]byte, string, error) {
 	d, err := parseDoiNumber(doi)
 	if err != nil {
 		fmt.Println(err)
-		return nil, "", genericError
+		return nil, "", fmt.Errorf("Please check if doi string is correct")
 	}
 
 	url := fmt.Sprintf("%v%s", ScihubURL, d)
 	html, err := getHTML(url)
 	if err != nil {
 		fmt.Println(err)
-		return nil, "", genericError
+		return nil, "", fmt.Errorf("Scihub servers are not available")
 	}
 
 	pdfLink, err := parseLink(html, "content")

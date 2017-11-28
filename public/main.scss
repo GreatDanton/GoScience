@@ -107,6 +107,7 @@ input:focus {
 label {
     color: $color-active;
     font-size: $font-size-p;
+    font-family: $font-family;
 }
 
 .Info {
@@ -130,6 +131,7 @@ button {
     color: $color-btn-text;
     border-radius: 3px;
     transition: $transition-default;
+    font-family: $font-family;
 }
 
 button:hover {

@@ -4,3 +4,4 @@ public/main_min.css
 settings.json
 builds
 pushToServer.sh
+deploy.sh
