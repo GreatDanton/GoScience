@@ -10,7 +10,7 @@ import (
 // ScihubURL is the entry point for downloading articles on scihub (front page url),
 // it might change in the future that's why it's provided as constant at the top of
 // the page
-const ScihubURL = "https://scihub22266oqcxt.onion.link/"
+const ScihubURL = "https://sci-hub.tw/"
 
 /* Example usage:
 func main() {
