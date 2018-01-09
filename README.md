@@ -28,7 +28,8 @@ Configuration example:
 ```json
 {
     "PORT": "8080",
-    "PASSWORD": "super_secret_password"
+    "PASSWORD": "super_secret_password",
+    "ScihubURL": "https://latestScihubURL"
 }
 ```
 

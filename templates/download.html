@@ -1,4 +1,4 @@
-<html>
+<!DOCTYPE html>
 
 <head>
     <title> Scihub Download </title>
@@ -15,18 +15,10 @@
 
             <!-- blank on form is used for opening pdf in new tab -->
             <form class="login-verticalstack" action="/" method="POST" autocomplete="off">
-                <label for="password">Password: </label></br>
-                <input id="password" name="password" type="password" value="{{.Password}}" autocomplete="off" />
-                <label name="label-password" class="Info">{{.LabelPass}}</label>
-
-                <div class="margin-top-20"></div>
-
-                <label for="doi">Doi:</label></br>
+                <label for="doi">Doi:</label>
+                </br>
                 <input id="doi" name="doi" value="{{.Doi}}" autocomplete="off" />
                 <label name="label-doi" class="Info">{{.LabelDoi}}</label>
-
-                <div class="margin-top-20"></div>
-                <input type="hidden" name="token" value="{{.Token}}">
 
                 <button class="login-button"> Download </button>
             </form>

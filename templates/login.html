@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="/public/main_min.css" />
+</head>
+
+<body>
+    <div class="content">
+        <img class="gopher-running" src="/public/images/gopherRunning_min.png" />
+
+        <div class="login-card">
+            <h1 class="centered"> Login </h1>
+            <div class="margin-top-40"></div>
+
+            <form class="login-verticalstack" method="POST" autocomplete="off">
+                <label for="password">Password: </label>
+                </br>
+                <input id="password" name="password" type="password" value="{{.Password}}" autocomplete="off" />
+                <label name="label-password" class="Info">{{.ErrorLabel}}</label>
+
+                <button id="login-btn" class="login-button"> Login </button>
+            </form>
+        </div>
+    </div>
+    <script>
+        var errorMsg = document.getElementById('label-password');
+        var btn = document.getElementById('login-btn');
+        btn.addEventListener('click', function () {
+            errorMsg.innerHTML = "";
+        });
+    </script>
+    <script src="/public/clearLabels.js"></script>
+</body>
+
+</html>

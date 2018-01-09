@@ -64,7 +64,7 @@ h1 {
     max-width: 600px;
     border: $border-card;
     margin: 40px auto;
-    min-height: 400px;
+    min-height: auto;
     box-shadow: $box-shadow-card;
 }
 
@@ -113,7 +113,7 @@ label {
 .Info {
     color: red;
     font-size: $font-size-p;
-    min-height: 19px;
+    min-height: 20px;
 }
 
 

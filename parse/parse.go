@@ -1,22 +1,18 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/greatdanton/goScience/global"
 )
 
-// ScihubURL is the entry point for downloading articles on scihub (front page url),
-// it might change in the future that's why it's provided as constant at the top of
-// the page
-const ScihubURL = "https://sci-hub.tw/"
-
-/* Example usage:
-func main() {
-	doi := "10.1080/09500340.2010.500105"
-	pdf, pdfName, err := GetPdf(doi)
-}*/
+// ErrCaptchaPresent should be returned when the scihub servers return captcha
+// instead of desired pdf
+var ErrCaptchaPresent = errors.New("Scihub servers returned captcha, try again later")
 
 // GetPdf fetches pdf from doi string, and returns byte stream(pdf), name of pdf
 // article and error (in case of error). Error is displayed in label located
@@ -32,7 +28,7 @@ func GetPdf(doi string) ([]byte, string, error) {
 		return nil, "", fmt.Errorf("Please check if doi string is correct")
 	}
 
-	url := fmt.Sprintf("%v%s", ScihubURL, d)
+	url := fmt.Sprintf("%v%s", global.ScihubURL, d)
 	html, err := getHTML(url)
 	if err != nil {
 		fmt.Println(err)
@@ -65,7 +61,12 @@ func GetPdf(doi string) ([]byte, string, error) {
 	// if captha is present on scihub (Content-type in headers is html/text instead of application/pdf)
 	content := pdfResp.Header.Get("Content-type")
 	if strings.Contains(content, "text/html") {
-		return nil, "", fmt.Errorf("Scihub servers returned captcha, try again later")
+		html, err := ioutil.ReadAll(pdfResp.Body)
+		if err != nil {
+			fmt.Println(err)
+			return nil, "", genericError
+		}
+		return html, "", ErrCaptchaPresent
 	}
 
 	// everything is allright, we got the pdf byte stream, return it

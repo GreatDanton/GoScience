@@ -1,43 +1,97 @@
 package main
 
 import (
-	"bytes"
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"html/template"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
-	"time"
 
-	"github.com/greatdanton/goScience/parse"
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/greatdanton/goScience/controller"
+	"github.com/greatdanton/goScience/global"
 )
-
-// PASSWORD is global variable, set by ReadConfiguration function.
-// It is used to prevent bots wasting our bandwith.
-var PASSWORD string
-
-// load template into memory at compile time (better performance than loading it
-// each time on function call)
-var templateDownload = template.Must(template.ParseFiles("templates/download.html"))
-
-// downloadForm is used for populating fields & displaying error
-// messages in download.html template
-type downloadForm struct {
-	Password  string
-	LabelPass string
-	Doi       string
-	LabelDoi  string
-	Token     string
-}
 
 // Configuration struct created for reading config from file
 type Configuration struct {
-	Port     string
-	Password string
+	Port      string
+	Password  string
+	ScihubURL string
+}
+
+// main function
+func main() {
+	config, err := ReadConfiguration()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	PORT := config.Port
+	global.PASSWORD = config.Password
+	global.ScihubURL = config.ScihubURL
+
+	// handling download section
+	http.HandleFunc("/", authMiddleware(controller.DownloadArticle))
+	http.HandleFunc("/login", loginMiddleware(controller.Login))
+
+	// serving css & public stuff
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
+
+	// start webserver
+	log.Print("Started server on http://127.0.0.1:" + PORT)
+	if err := http.ListenAndServe(":"+PORT, nil); err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
+}
+
+// authMiddleware checks if user is already authenticated. If the user is
+// not authenticated it sends him to /login otherwise he is able to
+// access downloading part of the application
+func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// check if cookie with hashed password exist
+		cookie, err := r.Cookie("GoScience")
+		if err != nil { // cookie does not exist
+			fmt.Println(err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		// check if password in cookie is the same as server set password
+		passHash := cookie.Value
+		err = bcrypt.CompareHashAndPassword([]byte(passHash), []byte(global.PASSWORD))
+		if err != nil {
+			fmt.Println(err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		// password is correct, serve the request
+		next.ServeHTTP(w, r)
+	})
+}
+
+// loginMiddleware checks if user is already authenticated (and redirects him/her to main download page).
+func loginMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("GoScience")
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		passHash := cookie.Value
+		err = bcrypt.CompareHashAndPassword([]byte(passHash), []byte(global.PASSWORD))
+		if err != nil {
+			fmt.Println(err)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// password is correct, just redirect user to download page -> "/"
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	})
 }
 
 // ReadConfiguration reads from "conf.json" file and returns Configuration struct
@@ -54,112 +108,10 @@ func ReadConfiguration() (Configuration, error) {
 		return Configuration{}, err
 	}
 
+	// check if scihub url is present in configuration
+	if len(config.ScihubURL) < 1 {
+		return Configuration{}, fmt.Errorf("ScihubURL is not present in configuration")
+	}
+
 	return config, nil
-}
-
-//
-// downloads article with doi set with doi field parameters in download.html template
-// and distribute it to the client
-func downloadArticle(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		// TODO: fix token part
-		// I am not entirely sure what to do with token? According to the book
-		//(https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/04.4.html)
-		// implementing it should take care of duplicate submissions
-		// Do I even need it?
-		crutime := time.Now().Unix()
-		h := md5.New()
-		io.WriteString(h, strconv.FormatInt(crutime, 10))
-		token := fmt.Sprintf("%x", h.Sum(nil))
-
-		t := templateDownload
-		data := downloadForm{Token: token}
-
-		err := t.Execute(w, data)
-		if err != nil {
-			log.Print(err)
-		}
-	} else if r.Method == "POST" {
-		r.ParseForm()
-		token := r.Form.Get("token")
-		// TODO: What do I do with token? Return error if no token is present?
-		if token == "" {
-			return
-		}
-		// safe password field escape
-		password := template.HTMLEscapeString(r.Form.Get("password"))
-		// inform user if password is not correct
-		if password != PASSWORD {
-			data := parseFormDownload(r, "PASS", "Wrong Password")
-			t := templateDownload
-			err := t.Execute(w, data)
-			if err != nil {
-				log.Print(err)
-			}
-			return
-		}
-
-		doi := template.HTMLEscapeString(r.Form.Get("doi"))
-		pdf, pdfName, err := parse.GetPdf(doi)
-		// inform user about wrong doi
-		if err != nil {
-			label := "DOI"
-			msg := fmt.Sprintf("%v", err)
-
-			// display error message to the end user
-			data := parseFormDownload(r, label, msg)
-			t := templateDownload
-			err := t.Execute(w, data)
-			if err != nil {
-				fmt.Println(err)
-			}
-			return
-		}
-		// opens up a browser popup for pdf download
-		w.Header().Set("Content-Disposition", "attachment; filename="+pdfName)
-		http.ServeContent(w, r, pdfName, time.Now(), bytes.NewReader(pdf))
-	}
-}
-
-//
-// parses download form, and reurns template with data filled in
-// label -> which info label text should be changed
-// info -> text for info label
-func parseFormDownload(r *http.Request, label string, info string) downloadForm {
-	r.ParseForm()
-	data := downloadForm{}
-	data.Doi = r.Form.Get("doi")
-	data.Password = r.Form.Get("password")
-	data.Token = r.Form.Get("token")
-
-	if label == "PASS" {
-		data.LabelPass = info
-	} else if label == "DOI" {
-		data.LabelDoi = info
-	}
-
-	return data
-}
-
-// main function
-func main() {
-	config, err := ReadConfiguration()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	PORT := config.Port
-	PASSWORD = config.Password
-
-	log.Print("Started server on http://127.0.0.1:" + PORT)
-
-	// handling download section
-	http.HandleFunc("/", downloadArticle)
-	// serving css & public stuff
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
-
-	// start webserver
-	if err := http.ListenAndServe(":"+PORT, nil); err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
 }
