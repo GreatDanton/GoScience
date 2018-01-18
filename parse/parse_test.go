@@ -31,7 +31,7 @@ func Test_parseDoiNumber(t *testing.T) {
 	}
 }
 
-func Test_parseLink(t *testing.T) {
+func Test_parsePdfLink(t *testing.T) {
 	tests := []struct {
 		html   string
 		tagID  string
@@ -59,7 +59,7 @@ func Test_parseLink(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		out, _ := parseLink(test.html, test.tagID)
+		out, _ := parsePdfLink(test.html, test.tagID)
 		if out != test.output {
 			t.Errorf("parseLink(input) = %v", out)
 			t.Errorf("Output should be: %v", test.output)

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Fill Captcha</title>
+    <link rel="stylesheet" type="text/css" href="/public/main_min.css" />
+</head>
+
+<body>
+    <div class="content">
+        <div class="login-card">
+            <h1 class="centered"> Captcha </h1>
+            <div class="margin-top-40"></div>
+
+            <form class="login-verticalstack" method="POST" autocomplete="off" action="/captcha">
+                <img src="data:image/jpeg;base64,{{.Captcha}}" />
+                <label for="captcha">Captcha: </label>
+                </br>
+                <input type="hidden" name="id" value={{.CaptchaID}} />
+                <input type="hidden" name="articleDoi" value={{.ArticleDoi}} />
+                <input type="hidden" name="articleLink" value={{.ArticleLink}} />
+
+                <input id="captcha" name="answer" type="text" autocomplete="off" />
+                <button id="send-captcha" class="login-button"> Send Captcha </button>
+
+                <a href="/">Back to search</a>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

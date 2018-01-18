@@ -34,6 +34,7 @@ func main() {
 	// handling download section
 	http.HandleFunc("/", authMiddleware(controller.DownloadArticle))
 	http.HandleFunc("/login", loginMiddleware(controller.Login))
+	http.HandleFunc("/captcha", authMiddleware(controller.Captcha))
 
 	// serving css & public stuff
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))

@@ -31,32 +31,38 @@ func DownloadArticle(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 	case "POST":
-		downloadRequest(w, r)
+		r.ParseForm()
+		doi := template.HTMLEscapeString(r.Form.Get("doi"))
+		downloadArticle(w, r, doi)
 	}
 }
 
-func downloadRequest(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	doi := template.HTMLEscapeString(r.Form.Get("doi"))
-	pdf, pdfName, err := parse.GetPdf(doi)
+func downloadArticle(w http.ResponseWriter, r *http.Request, doi string) {
+	pdf, pdfName, err := parse.GetPdfDoi(doi)
 	// inform user about wrong doi
 	if err != nil {
-		/*
-			// TODO: error contains captcha
-			if err == parse.ErrCaptchaPresent {
+		fmt.Println("################## GetPdf error")
+		fmt.Println(err)
+		// server returned captcha, display captcha image & relevant template
+		if err == parse.ErrCaptchaPresent {
+			// on error GetPdfDoi returns the following:
+			pdfLink := pdfName
 			parsedHTML := string(pdf)
-			tmpl, err := template.New(pdfName).Parse(parsedHTML)
+
+			captcha, err := parse.DownloadCaptcha(parsedHTML, pdfLink)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			err = tmpl.Execute(w, nil)
+			captcha.ArticleDoi = doi
+
+			err = captchaTemplate.Execute(w, captcha)
 			if err != nil {
 				fmt.Println(err)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
 			}
 			return
-		} */
+		}
 
 		// display error message to the end user
 		msg := fmt.Sprintf("%v", err)

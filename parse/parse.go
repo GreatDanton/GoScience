@@ -14,14 +14,13 @@ import (
 // instead of desired pdf
 var ErrCaptchaPresent = errors.New("Scihub servers returned captcha, try again later")
 
-// GetPdf fetches pdf from doi string, and returns byte stream(pdf), name of pdf
-// article and error (in case of error). Error is displayed in label located
-// under doi input.
-func GetPdf(doi string) ([]byte, string, error) {
-	// genericError is used when reporting error is necessary, but you don't want
-	// to expose app internals to the end user
-	genericError := fmt.Errorf("GoScience: Internal application error, try again later")
+// ErrGeneric is used when reporting error is necessary, but you don't want
+// to expose app internals to the end user
+var ErrGeneric = errors.New("GoScience: Internal application error, try again later")
 
+// GetPdfDoi fetches pdf from doi string, and returns byte stream(pdf), name of pdf
+// article and error (in case of error).
+func GetPdfDoi(doi string) ([]byte, string, error) {
 	d, err := parseDoiNumber(doi)
 	if err != nil {
 		fmt.Println(err)
@@ -35,17 +34,24 @@ func GetPdf(doi string) ([]byte, string, error) {
 		return nil, "", fmt.Errorf("Scihub servers are not available")
 	}
 
-	pdfLink, err := parseLink(html, "content")
-	pdfName := parsePdfName(pdfLink)
+	pdfLink, err := parsePdfLink(html, "content")
 	if err != nil {
 		fmt.Println(err)
 		return nil, "", fmt.Errorf("Article with this doi does not exist")
 	}
 
+	pdf, name, err := GetPdf(pdfLink)
+	return pdf, name, err
+}
+
+// GetPdf fetches pdf from direct link string, and returns byte stream(pdf), name of pdf
+// article and error (in case of error).
+func GetPdf(pdfLink string) ([]byte, string, error) {
+	pdfName := parsePdfName(pdfLink)
 	pdfResp, err := http.Get(pdfLink)
 	if err != nil {
 		fmt.Println(err)
-		return nil, "", genericError
+		return nil, "", ErrGeneric
 	}
 	defer pdfResp.Body.Close()
 
@@ -64,16 +70,17 @@ func GetPdf(doi string) ([]byte, string, error) {
 		html, err := ioutil.ReadAll(pdfResp.Body)
 		if err != nil {
 			fmt.Println(err)
-			return nil, "", genericError
+			return nil, "", ErrGeneric
 		}
-		return html, "", ErrCaptchaPresent
+		// return captcha html page, actual pdf link and error
+		return html, pdfLink, ErrCaptchaPresent
 	}
 
 	// everything is allright, we got the pdf byte stream, return it
 	pdf, err := ioutil.ReadAll(pdfResp.Body)
 	if err != nil {
 		fmt.Println(err)
-		return nil, "", genericError
+		return nil, "", ErrGeneric
 	}
 
 	fmt.Println("File downloaded")
@@ -118,7 +125,7 @@ func getHTML(url string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", err
+		return "", fmt.Errorf("Scihub server status code: %v", resp.Status)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -129,10 +136,10 @@ func getHTML(url string) (string, error) {
 	return text, nil
 }
 
-// parseLink parses pdf link from provided html page and id tag, if link is not found
+// parsePdfLink parses pdf link from provided html page and id tag, if link is not found
 // it means the article was not found in html string and error should
 // be returned
-func parseLink(htmlString, tagID string) (string, error) {
+func parsePdfLink(htmlString, tagID string) (string, error) {
 	// when html is parsed from url all html tags are returned like:
 	// <htmlTag id = "id">  <-- note the space between the = and "id"
 	id := "id = " + `"` + tagID + `"`
@@ -148,13 +155,13 @@ func parseLink(htmlString, tagID string) (string, error) {
 	// get index of link starting
 	startLink := strings.Index(html, "http")
 	if startLink == -1 {
-		return "", fmt.Errorf("parseLink `startLink` could not be found in provided html")
+		return "", fmt.Errorf("parsePdfLink `startLink` could not be found in provided html")
 	}
 
 	// get index of link ending
 	endLink := strings.Index(html[startLink:], `"`)
 	if endLink == -1 {
-		return "", fmt.Errorf("parseLink `endLink` could not be found in provided html string")
+		return "", fmt.Errorf("parsePdfLink `endLink` could not be found in provided html string")
 	}
 
 	// htmlString stays the same all the time that's why we are parsing it via [start:start+end]
