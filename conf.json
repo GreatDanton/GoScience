@@ -1,5 +1,5 @@
 {
     "Port": "8080",
     "Password": "secret_pass",
-    "ScihubURL": "https://sci-hub.tw/"
+    "ScihubURL": "https://sci-hub.la/"
 }

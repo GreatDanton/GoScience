@@ -6,7 +6,7 @@ func Test_getCaptchaURL(t *testing.T) {
 	tests := []struct {
 		input      string
 		captchaURL string
-		directURL  string
+		articleURL string
 	}{
 		{
 			`
@@ -45,12 +45,13 @@ func Test_getCaptchaURL(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		captchaURL, err := getCaptchaURL(test.input, test.directURL)
+		c := Captcha{ArticleURL: test.articleURL}
+		err := c.getCaptchaURL(test.input)
 		if err != nil {
 			t.Errorf("getCaptchaID() reported error that should not occur: %v", err)
 		}
-		if captchaURL != test.captchaURL {
-			t.Errorf("getCaptchaURL() = %v", captchaURL)
+		if c.URL != test.captchaURL {
+			t.Errorf("getCaptchaURL() = %v", c.URL)
 			t.Errorf("Output should be: %v", test.captchaURL)
 		}
 	}
@@ -58,8 +59,8 @@ func Test_getCaptchaURL(t *testing.T) {
 
 func Test_getCaptchaID(t *testing.T) {
 	tests := []struct {
-		input  string
-		output string
+		captchaURL string
+		output     string
 	}{
 		{
 			`http://dacemirror.sci-hub.hk/img/5a566b72e229c.jpg`,
@@ -72,12 +73,13 @@ func Test_getCaptchaID(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		id, err := getCaptchaID(test.input)
+		c := Captcha{URL: test.captchaURL}
+		err := c.getCaptchaID()
 		if err != nil {
-			t.Errorf("getCaptchaID(%v) returned error: %v", test.input, err)
+			t.Errorf("getCaptchaID(%v) returned error: %v", test.captchaURL, err)
 		}
-		if id != test.output {
-			t.Errorf("getCaptchaID(%v) returned %v", test.input, id)
+		if c.ID != test.output {
+			t.Errorf("getCaptchaID(%v) returned %v", test.captchaURL, c.ID)
 			t.Errorf("It should return %v", test.output)
 		}
 	}

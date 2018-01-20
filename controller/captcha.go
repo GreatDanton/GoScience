@@ -15,24 +15,29 @@ func Captcha(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		r.ParseForm()
-		captchaStr := r.Form.Get("answer")
+		answer := r.Form.Get("answer")
 		captchaID := r.Form.Get("id")
 		ArticleDoi := r.Form.Get("articleDoi")
-		ArticleLink := r.Form.Get("articleLink")
+		ArticleURL := r.Form.Get("articleURL")
 
 		form := url.Values{
-			"answer": {captchaStr},
+			"answer": {answer},
 			"id":     {captchaID},
 		}
 
+		// post captcha message to scihub servers
 		body := bytes.NewBufferString(form.Encode())
-		fmt.Println("######## ARTICLE LINK", ArticleLink)
-		response, err := http.Post(ArticleLink, "application/x-www-form-urlencoded", body)
+		response, err := http.Post(ArticleURL, "application/x-www-form-urlencoded", body)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(response)
+
+		// TODO: if status code != 200, display server message to the client
+		if response.StatusCode != http.StatusOK {
+			fmt.Println(response)
+		}
+
 		// download article
 		downloadArticle(w, r, ArticleDoi)
 	}

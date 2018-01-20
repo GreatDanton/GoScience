@@ -12,12 +12,12 @@
             <div class="margin-top-40"></div>
 
             <form class="login-verticalstack" method="POST" autocomplete="off" action="/captcha">
-                <img src="data:image/jpeg;base64,{{.Captcha}}" />
+                <img src="data:image/jpeg;base64,{{.Image}}" />
                 <label for="captcha">Captcha: </label>
                 </br>
-                <input type="hidden" name="id" value={{.CaptchaID}} />
+                <input type="hidden" name="id" value={{.ID}} />
                 <input type="hidden" name="articleDoi" value={{.ArticleDoi}} />
-                <input type="hidden" name="articleLink" value={{.ArticleLink}} />
+                <input type="hidden" name="articleURL" value={{.ArticleURL}} />
 
                 <input id="captcha" name="answer" type="text" autocomplete="off" />
                 <button id="send-captcha" class="login-button"> Send Captcha </button>

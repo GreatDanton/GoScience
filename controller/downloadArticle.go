@@ -38,24 +38,14 @@ func DownloadArticle(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadArticle(w http.ResponseWriter, r *http.Request, doi string) {
-	pdf, pdfName, err := parse.GetPdfDoi(doi)
-	// inform user about wrong doi
+	article := parse.Article{}
+	err := article.GetPdf(doi)
 	if err != nil {
 		fmt.Println("################## GetPdf error")
 		fmt.Println(err)
 		// server returned captcha, display captcha image & relevant template
 		if err == parse.ErrCaptchaPresent {
-			// on error GetPdfDoi returns the following:
-			pdfLink := pdfName
-			parsedHTML := string(pdf)
-
-			captcha, err := parse.DownloadCaptcha(parsedHTML, pdfLink)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			captcha.ArticleDoi = doi
-
+			captcha := article.Captcha
 			err = captchaTemplate.Execute(w, captcha)
 			if err != nil {
 				fmt.Println(err)
@@ -74,6 +64,8 @@ func downloadArticle(w http.ResponseWriter, r *http.Request, doi string) {
 		}
 		return
 	}
+	pdfName := article.Name
+	pdf := article.PdfStream
 	// opens up a browser popup for pdf download
 	w.Header().Set("Content-Disposition", "attachment; filename="+pdfName)
 	http.ServeContent(w, r, pdfName, time.Now(), bytes.NewReader(pdf))
