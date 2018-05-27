@@ -87,7 +87,7 @@ func (a *Article) parseDoiNumber(doiStr string) error {
 func (a *Article) parseArticleURL(htmlString string) error {
 	// when html is parsed from url all html tags are returned like:
 	// <htmlTag id = "id">  <-- note the space between the = and "id"
-	tagID := "content"
+	tagID := "main_content"
 	id := fmt.Sprintf(`id = "%s"`, tagID)
 	htmlTagStart := strings.Index(htmlString, id)
 	// if htmlTag with id does not exist return error.
@@ -104,8 +104,8 @@ func (a *Article) parseArticleURL(htmlString string) error {
 		return fmt.Errorf("`startLink` could not be found in provided html")
 	}
 
-	// get index of link ending
-	endLink := strings.Index(html[startLink:], `"`)
+	// get index of link ending (the link always ends with .pdf)
+	endLink := strings.Index(html[startLink:], `.pdf`) + len(".pdf")
 	if endLink == -1 {
 		return fmt.Errorf("`endLink` could not be found in provided html string")
 	}

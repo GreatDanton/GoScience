@@ -18,10 +18,22 @@ or just the number
 10.1145/2854146
 ```
 
+# Build from source
+
+    git clone https://github.com/GreatDanton/GoScience.git
+
+    cd GoScience
+
+    # compile /public/main.scss into /public/main_min.css
+    # A fast and easy way to do that is to use `prepros` tool
+
+    go build main.go
+
+
 # GoScience Configuration
 GoScience server port and password used for downloading articles are set via `conf.json` file
 located in the GoScience root directory. Password is used to keep the bots and undesirable
-people away from spending our precious bandwith.
+people away from spending our precious bandwidth.
 
 Configuration example:
 
