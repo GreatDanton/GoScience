@@ -18,6 +18,9 @@ var ErrCaptchaPresent = errors.New("Scihub servers returned captcha, try again l
 // to expose app internals to the end user
 var ErrGeneric = errors.New("GoScience: Internal application error, try again later")
 
+// ErrArticleDoesNotExist should be returned when the article does not exist
+var ErrArticleDoesNotExist = errors.New("Article with this doi does not exist")
+
 // Article struct represents pdf article that will be fetched
 // from scihub servers.
 type Article struct {
@@ -46,7 +49,10 @@ func (a *Article) GetPdf(doi string) error {
 
 	err = a.parseArticleURL(htmlString)
 	if err != nil {
-		return fmt.Errorf("Article with this doi does not exist")
+		if err == ErrArticleDoesNotExist {
+			return err
+		}
+		return fmt.Errorf("Scihub changed their website again, please inform developer to fix this issue")
 	}
 
 	a.parseName()
@@ -85,16 +91,27 @@ func (a *Article) parseDoiNumber(doiStr string) error {
 // parse article url from provided html string or return an error
 // if that is not possible
 func (a *Article) parseArticleURL(htmlString string) error {
-	// when html is parsed from url all html tags are returned like:
-	// <htmlTag id = "id">  <-- note the space between the = and "id"
-	tagID := "main_content"
-	id := fmt.Sprintf(`id = "%s"`, tagID)
-	htmlTagStart := strings.Index(htmlString, id)
+	// If doi number does not exist on Scihub, the server may return anything of the following:
+	// - empty page
+	// - special doi page
+	// - article not found string
+	// - main page
+	// Here we check whether or not the article with our desired DOI exist.
+	// This string checking is awful, but unfortunately their servers are returning
+	// http status code 200 no matter what, so we have to rely on string comparisons here
+	if len(htmlString) == 0 || strings.Index(htmlString, "article not found") > -1 || strings.Index(htmlString, "DOI Not Found") > -1 || strings.Index(htmlString, `id="input"`) > -1 {
+		return ErrArticleDoesNotExist
+	}
+
+	// In case the Scihub website changes again, the problem will be most likely
+	// in the starting tag
+	startingTag := "iframe"
+	htmlTagStart := strings.Index(htmlString, startingTag)
 	// if htmlTag with id does not exist return error.
 	// Currently this is true, but this part should be rewritten
 	// in case they decide to change their captcha implementation
 	if htmlTagStart == -1 {
-		return fmt.Errorf("'%v' does not exist in provided html string", tagID)
+		return fmt.Errorf("'%v' does not exist in provided html string", startingTag)
 	}
 	html := htmlString[htmlTagStart:]
 
